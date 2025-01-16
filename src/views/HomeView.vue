@@ -1,6 +1,7 @@
 <script setup>
 import {ref, watch} from "vue";
 import axios from "axios";
+import {useRouter} from "vue-router";
 
 const searchQuery = ref('')
 const queryTimeout = ref(null)
@@ -8,11 +9,12 @@ const searchResults = ref([]);
 const searchError = ref(null)
 const isLoading = ref(false)
 
+const router = useRouter()
+
 
 const fetchCities = async (query) => {
   const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY
   const url = `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`
-  debugger
 
   searchError.value = null
   isLoading.value = true
@@ -47,6 +49,21 @@ const getSearchResult = () => {
     }
   }, 300)
 }
+
+const previewCity = (city) => {
+  console.log(city)
+  const {name, state} = city
+  console.log(name,',', state)
+  router.push({
+    name: 'cityView',
+    params: {city: name, state: state},
+    query: {
+      lat: city.lat,
+      lon: city.lon,
+      preview: true,
+    }
+  })
+}
 watch(searchQuery, getSearchResult);
 </script>
 
@@ -64,7 +81,11 @@ watch(searchQuery, getSearchResult);
       {{ searchError }}
     </p>
     <ul v-if="searchResults.length > 0 && !isLoading" class="bg-weather-secondary rounded-md p-4">
-      <li v-for="(city, index) in searchResults" :key="city.id || index" class="py-2 px-4 border-b last:border-none">
+      <li v-for="(city, index) in searchResults"
+          :key="city.id || index"
+          class="py-2 px-4 border-b last:border-none"
+          @click="previewCity(city)"
+      >
         {{ city.name }}, {{ city.country }}
       </li>
     </ul>
